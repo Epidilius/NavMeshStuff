@@ -5,7 +5,7 @@ public class PassiveEnemyNav : MonoBehaviour {
 
 	Transform target;
 	NavMeshAgent agent;
-	public float fieldOfView;	//TODO: Add to stats
+	public float fieldOfView;	//TODO: Use the "perception" stat instead, don't divide by 2
 	public float rangeOfView;
 	bool isTimerRunning;
 	float timerTime;
