@@ -7,8 +7,6 @@ public class PassiveEnemyNav : MonoBehaviour {
 	NavMeshAgent agent;
 	public float fieldOfView;	//TODO: Use the "perception" stat instead, don't divide by 2
 	public float rangeOfView;
-	bool isTimerRunning;
-	float timerTime;
 	float chaseTime;
 	GameObject parent;
 
@@ -17,8 +15,6 @@ public class PassiveEnemyNav : MonoBehaviour {
 		target = null;
 		fieldOfView = 90.0f;
 		rangeOfView = 1800.0f;
-		timerTime = 0.0f;
-		isTimerRunning = false;
 		chaseTime = 5.0f;
 		parent = transform.parent.gameObject;
 		agent = parent.GetComponentInChildren<NavMeshAgent> ();
@@ -43,17 +39,6 @@ public class PassiveEnemyNav : MonoBehaviour {
 				}
 			} else {
 				agent.SetDestination(target.position);
-			}
-		}
-
-		if(isTimerRunning == true) {
-			if (timerTime >= 0.0f) {
-				//TODO: Better subtraction, try to get once per second
-				timerTime--;
-				Debug.Log("Timer time: " + timerTime.ToString());
-			} else {
-				//TODO: Check to see if player is within a certain radius?
-				ResetEnemy();
 			}
 		}
 	}
@@ -103,7 +88,7 @@ public class PassiveEnemyNav : MonoBehaviour {
 	{
 		Debug.Log ("trigger left");
 		if (aTriggerer.gameObject.tag == "Player") {
-			StartTimer(chaseTime);
+			//TODO: Create timer object
 			Debug.Log ("trigger left by player");
 		}
 	}
@@ -114,23 +99,9 @@ public class PassiveEnemyNav : MonoBehaviour {
 		target = aTarget;
 	}
 
-	void StartTimer(float aTimerLength)
-	{
-		Debug.Log ("Set timer");
-		timerTime = aTimerLength;
-		isTimerRunning = true;
-	}
-
-	void StopTimer()
-	{
-		Debug.Log ("Stop timer");
-		timerTime = 0.0f;
-		isTimerRunning = false;
-	}
-
 	void ResetEnemy()
 	{
 		SetTarget(transform);
-		StopTimer();
+		//TODO: Stop timer script
 	}
 }
