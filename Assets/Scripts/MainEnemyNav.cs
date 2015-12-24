@@ -15,8 +15,10 @@ public class MainEnemyNav : MonoBehaviour {
 
 	//Speeds
 	public float stalkSpeed = 5.0f;
-	public float chargeSpeed = 20.0f;
-	public float attackSpeed = 1.0f; //TODO: Eventually, make this private and get the speed from the anim
+	public float chargeSpeed = 25.0f;
+	public float attackSpeed = 3.0f; //TODO: Eventually, make this private and get the speed from the anim
+	public float stalkAccel = 8.0f;
+	public float chargeAccel = 40.0f;
 
 	//Distances
 	public float idleDistance = 50.0f;
@@ -24,7 +26,7 @@ public class MainEnemyNav : MonoBehaviour {
 
 	//Other
 	public int numberOfAttacksMin = 0;
-	public int numberOfAAttacksMax = 3;
+	public int numberOfAttacksMax = 3;
 	int attacksDoneThisRun = 0;
 	bool attackingThePlayer;
 
@@ -35,6 +37,7 @@ public class MainEnemyNav : MonoBehaviour {
 	void Start () {
 		Debug.Log ("Main Enemy Start");
 
+		attackTimer = new Timer ();
 		ClearTimer ();
 		SetStalkTimer ();
 
@@ -44,7 +47,7 @@ public class MainEnemyNav : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (attackTimer != null)	//TODO: Figure out why == and != seem to be switched
+		if (attackTimer.GetID () != "NULLID")
 			attackTimer.TimerUpdate ();
 
 		if (target != null) {
@@ -56,11 +59,11 @@ public class MainEnemyNav : MonoBehaviour {
 			if(distance <= agent.stoppingDistance) {
 				transform.RotateAround(target.transform.position, Vector3.up, agent.speed * Time.deltaTime);
 
-				if(agent.stoppingDistance == attackDistance && attackTimer == null) {
+				if(agent.stoppingDistance == attackDistance && attackTimer.GetID() == "NULLID") {
 					Debug.Log("Attack Distance");
 					SetAttackTimer ();
 				}
-				else if (agent.stoppingDistance == idleDistance && attackTimer == null ) {
+				else if (agent.stoppingDistance == idleDistance && attackTimer.GetID() == "NULLID") {
 					Debug.Log("Idle Distance");
 					SetStalkTimer ();
 				}
@@ -76,6 +79,7 @@ public class MainEnemyNav : MonoBehaviour {
 
 		agent.stoppingDistance = attackDistance;
 		agent.speed = chargeSpeed;
+		agent.acceleration = chargeAccel;
 
 		//TODO: Choose a number of attacks to do
 		//TODO: Keep track of those attacks, and when they're hit call EndAttackRun
@@ -89,6 +93,8 @@ public class MainEnemyNav : MonoBehaviour {
 
 		agent.stoppingDistance = idleDistance;
 		agent.speed = stalkSpeed;
+		agent.acceleration = stalkAccel;
+
 
 		attacksDoneThisRun = 0;
 
@@ -97,30 +103,19 @@ public class MainEnemyNav : MonoBehaviour {
 
 	//TIMER STUFF
 	void SetAttackTimer () {
-		if (attackTimer == null) {
-			attackTimer = new Timer ();
-		}
-
-		int attackNumber = Random.Range (numberOfAttacksMin, numberOfAAttacksMax);
+		int attackNumber = Random.Range (numberOfAttacksMin, numberOfAttacksMax);
 		float waitTime = attackSpeed * (attackNumber * 1.0f);
 
 		attackTimer.SetParams ("MainEnemyAttackTimer", waitTime, EndAttackRun);
 	}
 
 	void SetStalkTimer() {		
-		if (attackTimer == null) {
-			attackTimer = new Timer ();
-		}
-
 		float waitTime = Random.Range (timeBetweenAttacksMin, timeBetweenAttacksMax);
 
 		attackTimer.SetParams ("MainEnemyStalkTimer", 15.0f, BeginAttackRun);
 	}
 
 	void ClearTimer() {
-		if (attackTimer != null) {
-			Destroy (attackTimer);
-		}
-		attackTimer = null;
+		attackTimer.SetID ("NULLID");	//TODO: Make variable
 	}
 }

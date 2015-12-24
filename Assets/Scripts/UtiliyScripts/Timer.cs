@@ -49,6 +49,12 @@ public class Timer : MonoBehaviour {
 		}
 	}
 
+	public string GetID() {
+		return id;
+	}
+	public void SetID(string aID) {
+		id = aID;
+	}
 
 	//TODO: SetNewTime 
 	//TODO: SetNewFunctionToCall
