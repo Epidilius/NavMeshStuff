@@ -3,6 +3,8 @@ using System.Collections;
 
 public class MainEnemyNav : MonoBehaviour {
 	//TODO: If the player see this, increase speed
+	//TODO: If hit by the player, the wait time minimum should be doubled. 
+	//TODO: Create a function to deal with being shot by the player
 	public Transform playerTarget;
 	Vector3 fleeTarget;
 
@@ -25,6 +27,7 @@ public class MainEnemyNav : MonoBehaviour {
 	public int numberOfAttacksMin = 0;
 	public int numberOfAttacksMax = 3;
 	int attacksDoneThisRun = 0;
+	bool rotateRight;
 	bool attackingThePlayer;
 	bool fleeingThePlayer;
 
@@ -41,6 +44,9 @@ public class MainEnemyNav : MonoBehaviour {
 
 		fleeTarget = Vector3.zero;
 		fleeingThePlayer = false;
+
+		rotateRight = false;
+		attackingThePlayer = false;
 
 		agent = GetComponent<NavMeshAgent> ();
 		agent.stoppingDistance = idleDistance;
@@ -102,6 +108,8 @@ public class MainEnemyNav : MonoBehaviour {
 
 		Debug.Log ("Ending attack run");
 
+		rotateRight = !rotateRight;
+
 		attacksDoneThisRun = 0;
 
 		FleeFromPlayer ();
@@ -109,16 +117,22 @@ public class MainEnemyNav : MonoBehaviour {
 
 	//Nav Stuff
 	void FleeFromPlayer () {
-		Vector3 ranDir = Random.insideUnitCircle * idleDistance * 2.0f;
 
-		ranDir.z = ranDir.y;
-		ranDir.y = 0.0f;
-		ranDir += transform.position;
-		NavMeshHit hit;
-		NavMesh.SamplePosition(ranDir, out hit, idleDistance * 2.0f, 1);
-		fleeTarget = hit.position;
+		do {
+			Vector3 ranDir = Random.insideUnitCircle * idleDistance * 2.0f;
+
+			ranDir.z = ranDir.y;
+			ranDir.y = 0.0f;
+			ranDir += transform.position;
+
+			NavMeshHit hit;
+			NavMesh.SamplePosition (ranDir, out hit, idleDistance * 2.0f, 1);
+
+			fleeTarget = hit.position;
+		} while (Vector3.Distance(fleeTarget, transform.position) < idleDistance * 2.0f);
 		
 		agent.SetDestination (fleeTarget);
+		//agent.Warp (fleeTarget); This teleports the agent
 
 		fleeingThePlayer = true;
 	}
