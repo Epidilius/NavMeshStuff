@@ -41,12 +41,17 @@ public class Timer : MonoBehaviour {
 				if (functionToCall != null) {
 					functionToCall ();
 					isRunning = false;
+					functionToCall = DoNothingFunction;
 					//Destroy(this);
 				}
 			}
 		} else {
 			Debug.Log ("isRunning == " + isRunning.ToString());
 		}
+	}
+
+	void DoNothingFunction() {
+	
 	}
 
 	public string GetID() {

@@ -3,11 +3,8 @@ using System.Collections;
 
 public class MainEnemyNav : MonoBehaviour {
 	//TODO: If the player see this, increase speed
-	//TODO: Have it attack the enemy on random intervals, with min and max wait time as public vars
-	//TODO: Have it perform a random number of attacks (should at most remove 1/3 of player's max health), with min and max number of attacks as public vars
-	//TODO: Have it circle the player while it attacks (have a timer run to simulate attack duration) then flee to edge of radius
-	//TODO: Maybe hack this out by placing a collider on the player that randomly goes down then back up?
-	public Transform target;
+	public Transform playerTarget;
+	Vector3 fleeTarget;
 
 	//Time lengths in minutes
 	public float timeBetweenAttacksMin = 60.0f;
@@ -16,7 +13,7 @@ public class MainEnemyNav : MonoBehaviour {
 	//Speeds
 	public float stalkSpeed = 5.0f;
 	public float chargeSpeed = 25.0f;
-	public float attackSpeed = 3.0f; //TODO: Eventually, make this private and get the speed from the anim
+	public float attackSpeed = 3.0f;
 	public float stalkAccel = 8.0f;
 	public float chargeAccel = 40.0f;
 
@@ -29,6 +26,7 @@ public class MainEnemyNav : MonoBehaviour {
 	public int numberOfAttacksMax = 3;
 	int attacksDoneThisRun = 0;
 	bool attackingThePlayer;
+	bool fleeingThePlayer;
 
 	Timer attackTimer;
 	NavMeshAgent agent;
@@ -41,6 +39,9 @@ public class MainEnemyNav : MonoBehaviour {
 		ClearTimer ();
 		SetStalkTimer ();
 
+		fleeTarget = Vector3.zero;
+		fleeingThePlayer = false;
+
 		agent = GetComponent<NavMeshAgent> ();
 		agent.stoppingDistance = idleDistance;
 	}
@@ -50,16 +51,26 @@ public class MainEnemyNav : MonoBehaviour {
 		if (attackTimer.GetID () != "NULLID")
 			attackTimer.TimerUpdate ();
 
-		if (target != null) {
-			agent.SetDestination (target.position);
-			
-			float distance = Vector3.Distance(transform.position, target.position);
+		if (playerTarget != null) {
+			float distance = float.MaxValue;
+
+			if(fleeingThePlayer == false) {
+				agent.SetDestination (playerTarget.position);
+				
+				distance = Vector3.Distance(transform.position, playerTarget.position);
+			} else {
+				distance = Vector3.Distance(transform.position, fleeTarget);
+			}
+
 			//Debug.Log("Distance: " + distance.ToString());
 
-			if(distance <= agent.stoppingDistance) {
-				transform.RotateAround(target.transform.position, Vector3.up, agent.speed * Time.deltaTime);
+			if(distance <= agent.stoppingDistance && distance != float.MaxValue) {
+				transform.RotateAround(playerTarget.transform.position, Vector3.up, agent.speed * Time.deltaTime);
 
-				if(agent.stoppingDistance == attackDistance && attackTimer.GetID() == "NULLID") {
+				if(fleeingThePlayer == true) {
+					BeginChasingPlayer();
+				}
+				else if(agent.stoppingDistance == attackDistance && attackTimer.GetID() == "NULLID") {
 					Debug.Log("Attack Distance");
 					SetAttackTimer ();
 				}
@@ -91,14 +102,33 @@ public class MainEnemyNav : MonoBehaviour {
 
 		Debug.Log ("Ending attack run");
 
+		attacksDoneThisRun = 0;
+
+		FleeFromPlayer ();
+	}
+
+	//Nav Stuff
+	void FleeFromPlayer () {
+		Vector3 ranDir = Random.insideUnitCircle * idleDistance * 2.0f;
+
+		ranDir.z = ranDir.y;
+		ranDir.y = 0.0f;
+		ranDir += transform.position;
+		NavMeshHit hit;
+		NavMesh.SamplePosition(ranDir, out hit, idleDistance * 2.0f, 1);
+		fleeTarget = hit.position;
+		
+		agent.SetDestination (fleeTarget);
+
+		fleeingThePlayer = true;
+	}
+
+	void BeginChasingPlayer() {
 		agent.stoppingDistance = idleDistance;
 		agent.speed = stalkSpeed;
 		agent.acceleration = stalkAccel;
-
-
-		attacksDoneThisRun = 0;
-
-		//TODO: Choose a point 200 meters away from the current point and set it as target. When the enemy is within circleDistance, set target to be the player and change enemy speed
+		fleeingThePlayer = false;
+		fleeTarget = Vector3.zero;
 	}
 
 	//TIMER STUFF
@@ -112,7 +142,7 @@ public class MainEnemyNav : MonoBehaviour {
 	void SetStalkTimer() {		
 		float waitTime = Random.Range (timeBetweenAttacksMin, timeBetweenAttacksMax);
 
-		attackTimer.SetParams ("MainEnemyStalkTimer", 15.0f, BeginAttackRun);
+		attackTimer.SetParams ("MainEnemyStalkTimer", 15.0f, BeginAttackRun);	//TODO: Set the 15.0f to waitTime
 	}
 
 	void ClearTimer() {
